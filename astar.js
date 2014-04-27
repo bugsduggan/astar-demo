@@ -120,28 +120,44 @@ function getNeighbours(cell) {
     var n = Array();
 
     if (x > 0 && y > 0) {
-        n.push((x - 1) + "," + (y - 1));
+        if (maze.isClear((x - 1), (y - 1))) {
+            n.push((x - 1) + "," + (y - 1));
+        }
     }
     if (y > 0) {
-        n.push( x      + "," + (y - 1));
+        if (maze.isClear(x, (y - 1))) {
+            n.push( x      + "," + (y - 1));
+        }
     }
     if (x < (maze.width - 1) && y > 0) {
-        n.push((x + 1) + "," + (y - 1));
+        if (maze.isClear((x + 1), (y - 1))) {
+            n.push((x + 1) + "," + (y - 1));
+        }
     }
     if (x < (maze.width - 1)) {
-        n.push((x + 1) + "," +  y     );
+        if (maze.isClear((x + 1), y)) {
+            n.push((x + 1) + "," +  y     );
+        }
     }
     if (x < (maze.width - 1) && y < (maze.height - 1)) {
-        n.push((x + 1) + "," + (y + 1));
+        if (maze.isClear((x + 1), (y + 1))) {
+            n.push((x + 1) + "," + (y + 1));
+        }
     }
     if (y < (maze.height - 1)) {
-        n.push( x      + "," + (y + 1));
+        if (maze.isClear(x, (y + 1))) {
+            n.push( x      + "," + (y + 1));
+        }
     }
     if (x > 0 && y < (maze.height - 1)) {
-        n.push((x - 1) + "," + (y + 1));
+        if (maze.isClear((x - 1), (y + 1))) {
+            n.push((x - 1) + "," + (y + 1));
+        }
     }
     if (x > 0) {
-        n.push((x - 1) + "," +  y     );
+        if (maze.isClear((x - 1), y)) {
+            n.push((x - 1) + "," +  y     );
+        }
     }
 
     return n;
