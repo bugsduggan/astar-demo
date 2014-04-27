@@ -68,7 +68,7 @@ function Maze() {
     }
 
     self.isClear = function(x, y) {
-        return (self.cells[y][x] === "empty" || self.cells[y][x] === "exit")
+        return (self.getCell(x, y) === "empty" || self.getCell(x, y) === "exit" || self.getCell(x, y) === "path")
     }
 
     self.toggleBlock = function(x, y) {
@@ -100,6 +100,127 @@ function Maze() {
         getCell: self.getCell,
         isClear: self.isClear,
     };
+}
+
+function findNext(openSet, fScore) {
+    var bestFScore = 32000;
+    var bestCell;
+    openSet.keys().forEach(function(entry) {
+        if (fScore[entry] < bestFScore) {
+            bestFScore = fScore[entry];
+            bestCell = entry;
+        }
+    });
+    return bestCell;
+}
+
+function getNeighbours(cell) {
+    var x = parseInt(cell.split(",")[0]);
+    var y = parseInt(cell.split(",")[1]);
+    var n = Array();
+
+    if (x > 0 && y > 0) {
+        n.push((x - 1) + "," + (y - 1));
+    }
+    if (y > 0) {
+        n.push( x      + "," + (y - 1));
+    }
+    if (x < (maze.width - 1) && y > 0) {
+        n.push((x + 1) + "," + (y - 1));
+    }
+    if (x < (maze.width - 1)) {
+        n.push((x + 1) + "," +  y     );
+    }
+    if (x < (maze.width - 1) && y < (maze.height - 1)) {
+        n.push((x + 1) + "," + (y + 1));
+    }
+    if (y < (maze.height - 1)) {
+        n.push( x      + "," + (y + 1));
+    }
+    if (x > 0 && y < (maze.height - 1)) {
+        n.push((x - 1) + "," + (y + 1));
+    }
+    if (x > 0) {
+        n.push((x - 1) + "," +  y     );
+    }
+
+    return n;
+}
+
+function distanceBetween(a, b) {
+    ax = parseInt(a.split(",")[0]);
+    ay = parseInt(a.split(",")[1]);
+    bx = parseInt(b.split(",")[0]);
+    by = parseInt(b.split(",")[1]);
+
+    return (Math.abs(ax - bx) + Math.abs(ay - by));
+}
+
+function estimateCost(a, b) {
+    return distanceBetween(a, b);
+}
+
+function reconstructPath(cameFrom, current) {
+    if (cameFrom.hasOwnProperty(current)) {
+        var p = reconstructPath(cameFrom, cameFrom[current]);
+        p.push(current);
+        return p;
+    } else {
+        return Array(current);
+    }
+}
+
+function aStar(startX, startY, endX, endY) {
+    var start = startX + ',' + startY;
+    var goal = endX + ',' + endY;
+
+    var closedSet = new MiniSet();
+    var openSet = new MiniSet(start);
+    var cameFrom = {};
+
+    var gScore = {};
+    gScore[start] = 0;
+    var fScore = {};
+    fScore[start] = gScore[start] + estimateCost(start, goal);
+
+    while (!openSet.isEmpty()) {
+        var current = findNext(openSet, fScore);
+        if (current === goal) {
+            return reconstructPath(cameFrom, current);
+        }
+
+        openSet.remove(current);
+        closedSet.add(current);
+
+        getNeighbours(current).forEach(function(entry) {
+            if (closedSet.has(entry)) {
+                return;
+            }
+            var tentativeScore = gScore[current] + distanceBetween(current, entry);
+
+            if (!openSet.has(entry) || tentativeScore < gScore[entry]) {
+                cameFrom[entry] = current;
+                gScore[entry] = tentativeScore;
+                fScore[entry] = gScore[entry] + estimateCost(entry, goal);
+                if (!openSet.has(entry)) {
+                    openSet.add(entry);
+                }
+            }
+        });
+    }
+
+    return null;
+}
+
+function execute() {
+    aStar(0, 0, maze.width - 1, maze.height -1).forEach(function(entry) {
+        var x = parseInt(entry.split(",")[0]);
+        var y = parseInt(entry.split(",")[1]);
+
+        if (maze.getCell(x, y) != "player" && maze.getCell(x, y) != "exit") {
+            maze.setCell(x, y, "path");
+        }
+    });
 }
 
 $(function() {
