@@ -31,7 +31,13 @@ function Maze() {
         }
 
         // draw cells
-        self.drawCells();
+        for (var x = 0; x < (self.width / self.block_size); x++) {
+            for (var y = 0; y < (self.height / self.block_size); y++) {
+                self.cursor.rect((x * self.block_size), (y * self.block_size),
+                                 self.block_size, self.block_size);
+            }
+        }
+        self.cursor.stroke();
     };
 
     self.fillCell = function(x, y, color) {
@@ -40,33 +46,21 @@ function Maze() {
                              self.block_size - 2, self.block_size - 2);
     }
 
-    self.drawCells = function() {
-        for (var x = 0; x < (self.width / self.block_size); x++) {
-            for (var y = 0; y < (self.height / self.block_size); y++) {
-                self.cursor.rect((x * self.block_size), (y * self.block_size),
-                                 self.block_size, self.block_size);
-            }
-        }
-        self.cursor.stroke();
-
-        for (var y = 0; y < self.cells.length; y++) {
-            for (var x = 0; x < self.cells[y].length; x++) {
-                if (self.cells[y][x] === "player") {
-                    self.fillCell(x, y, "#00ff00");
-                }
-                if (self.cells[y][x] === "block") {
-                    self.fillCell(x, y, "#aaaaaa");
-                }
-                if (self.cells[y][x] === "exit") {
-                    self.fillCell(x, y, "#ff0000");
-                }
-            }
-        }
-    };
-
     self.setCell = function(x, y, contents) {
         self.cells[y][x] = contents;
-        self.drawCells();
+
+        var color = "#ffffff";
+        if (contents === "block") {
+            color = "#aaaaaa";
+        } else if (contents === "exit") {
+            color = "#ff0000";
+        } else if (contents === "player") {
+            color = "#00ff00";
+        } else if (contents === "path") {
+            color = "#ffff00";
+        }
+
+        self.fillCell(x, y, color);
     }
 
     self.getCell = function(x, y) {
@@ -75,6 +69,25 @@ function Maze() {
 
     self.isClear = function(x, y) {
         return (self.cells[y][x] === "empty" || self.cells[y][x] === "exit")
+    }
+
+    self.toggleBlock = function(x, y) {
+        if (self.getCell(x, y) === "empty") {
+            self.setCell(x, y, "block");
+        } else if (self.getCell(x, y) === "block") {
+            self.setCell(x, y, "empty");
+        }
+    }
+
+    self.canvas.onclick = function(evt) {
+        var x = evt.clientX - self.canvas.getBoundingClientRect().left;
+        var y = evt.clientY - self.canvas.getBoundingClientRect().top;
+        x = x - (x % self.block_size);
+        y = y - (y % self.block_size);
+        x = x / self.block_size;
+        y = y / self.block_size;
+
+        self.toggleBlock(x, y);
     }
 
     self.reset();
