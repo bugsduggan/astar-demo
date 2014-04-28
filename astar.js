@@ -14,7 +14,7 @@ function Maze() {
 
     self.cursor = self.canvas.getContext("2d");
 
-    $("body").append(self.canvas);
+    $("#display").append(self.canvas);
 
     self.reset = function() {
         // clear grid
@@ -87,7 +87,37 @@ function Maze() {
         x = x / self.block_size;
         y = y / self.block_size;
 
-        self.toggleBlock(x, y);
+        if ($("#brush-block")[0].checked) {
+            self.toggleBlock(x, y);
+        } else if ($("#brush-player")[0].checked) {
+            var player = self.getPlayer();
+            maze.setCell(player[0], player[1], "empty");
+            maze.setCell(x, y, "player");
+        } else if ($("#brush-exit")[0].checked) {
+            var exit = self.getExit();
+            maze.setCell(exit[0], exit[1], "empty");
+            maze.setCell(x, y, "exit");
+        }
+    }
+
+    self.getPlayer = function() {
+        for (var x = 0; x < (self.width / self.block_size); x++) {
+            for (var y = 0; y < (self.height / self.block_size); y++) {
+                if (self.getCell(x, y) === "player") {
+                    return [x, y];
+                }
+            }
+        }
+    }
+
+    self.getExit = function() {
+        for (var x = 0; x < (self.width / self.block_size); x++) {
+            for (var y = 0; y < (self.height / self.block_size); y++) {
+                if (self.getCell(x, y) === "exit") {
+                    return [x, y];
+                }
+            }
+        }
     }
 
     self.reset();
@@ -99,6 +129,8 @@ function Maze() {
         setCell: self.setCell,
         getCell: self.getCell,
         isClear: self.isClear,
+        getPlayer: self.getPlayer,
+        getExit: self.getExit,
     };
 }
 
@@ -209,7 +241,9 @@ function aStar(startX, startY, endX, endY) {
 }
 
 function execute() {
-    aStar(0, 0, maze.width - 1, maze.height -1).forEach(function(entry) {
+    var start = maze.getPlayer();
+    var exit = maze.getExit();
+    aStar(start[0], start[1], exit[0], exit[1]).forEach(function(entry) {
         var x = parseInt(entry.split(",")[0]);
         var y = parseInt(entry.split(",")[1]);
 
@@ -223,4 +257,14 @@ $(function() {
     maze = Maze()
     maze.setCell(0, 0, "player");
     maze.setCell(maze.width - 1, maze.height - 1, "exit");
+
+    $("#execute")[0].onclick = function() {
+        execute();
+    };
+
+    $("#reset")[0].onclick = function() {
+        maze.reset();
+        maze.setCell(0, 0, "player");
+        maze.setCell(maze.width - 1, maze.height - 1, "exit");
+    }
 });
