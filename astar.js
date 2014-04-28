@@ -72,10 +72,40 @@ function Maze() {
     }
 
     self.toggleBlock = function(x, y) {
-        if (self.getCell(x, y) === "empty") {
+        if (self.getCell(x, y) === "empty" || self.getCell(x, y) === "path") {
             self.setCell(x, y, "block");
         } else if (self.getCell(x, y) === "block") {
             self.setCell(x, y, "empty");
+        }
+    }
+
+    self.getPlayer = function() {
+        for (var x = 0; x < (self.width / self.block_size); x++) {
+            for (var y = 0; y < (self.height / self.block_size); y++) {
+                if (self.getCell(x, y) === "player") {
+                    return [x, y];
+                }
+            }
+        }
+    }
+
+    self.getExit = function() {
+        for (var x = 0; x < (self.width / self.block_size); x++) {
+            for (var y = 0; y < (self.height / self.block_size); y++) {
+                if (self.getCell(x, y) === "exit") {
+                    return [x, y];
+                }
+            }
+        }
+    }
+
+    self.clearPath = function() {
+        for (var x = 0; x < (self.width / self.block_size); x++) {
+            for (var y = 0; y < (self.height / self.block_size); y++) {
+                if (self.getCell(x, y) === "path") {
+                    self.setCell(x, y, "empty");
+                }
+            }
         }
     }
 
@@ -100,26 +130,6 @@ function Maze() {
         }
     }
 
-    self.getPlayer = function() {
-        for (var x = 0; x < (self.width / self.block_size); x++) {
-            for (var y = 0; y < (self.height / self.block_size); y++) {
-                if (self.getCell(x, y) === "player") {
-                    return [x, y];
-                }
-            }
-        }
-    }
-
-    self.getExit = function() {
-        for (var x = 0; x < (self.width / self.block_size); x++) {
-            for (var y = 0; y < (self.height / self.block_size); y++) {
-                if (self.getCell(x, y) === "exit") {
-                    return [x, y];
-                }
-            }
-        }
-    }
-
     self.reset();
 
     return {
@@ -131,6 +141,7 @@ function Maze() {
         isClear: self.isClear,
         getPlayer: self.getPlayer,
         getExit: self.getExit,
+        clearPath: self.clearPath,
     };
 }
 
@@ -241,9 +252,18 @@ function aStar(startX, startY, endX, endY) {
 }
 
 function execute() {
+    maze.clearPath();
+
     var start = maze.getPlayer();
     var exit = maze.getExit();
-    aStar(start[0], start[1], exit[0], exit[1]).forEach(function(entry) {
+    var path = aStar(start[0], start[1], exit[0], exit[1]);
+
+    if (path === null) {
+        alert('No path found!');
+        return;
+    }
+
+    path.forEach(function(entry) {
         var x = parseInt(entry.split(",")[0]);
         var y = parseInt(entry.split(",")[1]);
 
@@ -261,6 +281,10 @@ $(function() {
     $("#execute")[0].onclick = function() {
         execute();
     };
+
+    $("#clear-path")[0].onclick = function() {
+        maze.clearPath();
+    }
 
     $("#reset")[0].onclick = function() {
         maze.reset();
