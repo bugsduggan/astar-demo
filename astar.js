@@ -71,14 +71,6 @@ function Maze() {
         return (self.getCell(x, y) === "empty" || self.getCell(x, y) === "exit" || self.getCell(x, y) === "path")
     }
 
-    self.toggleBlock = function(x, y) {
-        if (self.getCell(x, y) === "empty" || self.getCell(x, y) === "path") {
-            self.setCell(x, y, "block");
-        } else if (self.getCell(x, y) === "block") {
-            self.setCell(x, y, "empty");
-        }
-    }
-
     self.getPlayer = function() {
         for (var x = 0; x < (self.width / self.block_size); x++) {
             for (var y = 0; y < (self.height / self.block_size); y++) {
@@ -109,16 +101,26 @@ function Maze() {
         }
     }
 
-    self.canvas.onclick = function(evt) {
-        var x = evt.clientX - self.canvas.getBoundingClientRect().left;
-        var y = evt.clientY - self.canvas.getBoundingClientRect().top;
+    self.getCellFromClick = function(x, y) {
+        x = x - self.canvas.getBoundingClientRect().left;
+        y = y - self.canvas.getBoundingClientRect().top;
         x = x - (x % self.block_size);
         y = y - (y % self.block_size);
         x = x / self.block_size;
         y = y / self.block_size;
+        return [x, y];
+    }
+
+    self.updateFromClick = function(cell) {
+        var x = cell[0];
+        var y = cell[1];
 
         if ($("#brush-block")[0].checked) {
-            self.toggleBlock(x, y);
+            if (self.dragCreateBlock) {
+                self.setCell(x, y, "block");
+            } else {
+                self.setCell(x, y, "empty");
+            }
         } else if ($("#brush-player")[0].checked) {
             var player = self.getPlayer();
             maze.setCell(player[0], player[1], "empty");
@@ -128,6 +130,38 @@ function Maze() {
             maze.setCell(exit[0], exit[1], "empty");
             maze.setCell(x, y, "exit");
         }
+    }
+
+    self.dragging = false;
+    self.dragCreateBlock = false;
+    self.dragStart = null;
+    self.canvas.onmousedown = function(evt) {
+        self.dragging = true;
+        self.dragStart = self.getCellFromClick(evt.clientX, evt.clientY);
+
+        if (self.getCell(self.dragStart[0], self.dragStart[1]) === "block") {
+            self.dragCreateBlock = false;
+        } else {
+            self.dragCreateBlock = true;
+        }
+
+        self.updateFromClick(self.dragStart);
+    }
+
+    self.canvas.onmouseup = function(evt) {
+        self.dragging = false;
+        self.dragStart = null;
+
+        var cell = self.getCellFromClick(evt.clientX, evt.clientY);
+        self.updateFromClick(cell);
+    }
+
+    self.canvas.onmousemove = function(evt) {
+        if (!self.dragging) {
+            return;
+        }
+        var cell = self.getCellFromClick(evt.clientX, evt.clientY);
+        self.updateFromClick(cell);
     }
 
     self.reset();
