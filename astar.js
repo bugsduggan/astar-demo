@@ -47,6 +47,12 @@ function Maze() {
     }
 
     self.setCell = function(x, y, contents) {
+        if (y > (self.height / self.block_size) || x > (self.width / self.block_size)) {
+            return;
+        } else if (y < 0 || x < 0) {
+            return;
+        }
+
         self.cells[y][x] = contents;
 
         var color = "#ffffff";
