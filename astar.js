@@ -1,3 +1,7 @@
+/*
+ * This is very messy, ill-thought-out code... but it works, stop yer moaning.
+ */
+
 var maze;
 
 function Maze() {
