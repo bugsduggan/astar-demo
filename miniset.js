@@ -1,4 +1,12 @@
 "use strict";
+/*
+ * This code isn't mine, I found it on GitHub:
+ * https://github.com/jfriend00/Javascript-Set
+ *
+ * You should take a look at that repo, there's some really
+ * nice code in there!
+ */
+
 //-------------------------------------------
 // Simple implementation of a Set in javascript
 //
