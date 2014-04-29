@@ -3,8 +3,8 @@ var maze;
 function Maze() {
     var self = this;
 
-    self.width = 600;
-    self.height = 400;
+    self.width = 620;
+    self.height = 420;
     self.block_size = 20;
     self.canvas = document.createElement("canvas");
 
@@ -313,8 +313,88 @@ function execute() {
     });
 }
 
+function findNeighbourInForest(forest, neighbour) {
+    var r = null;
+    for (var i = 0; i < forest.length; i++) {
+        forest[i].forEach(function(entry) {
+            if (entry === neighbour) {
+                r = i;
+            }
+        });
+    }
+    return r;
+}
+
+function generateMaze() {
+    maze.reset();
+    var wallSet = new MiniSet();
+    var forest = Array();
+    for (var y = 1; y < maze.height; y += 2) {
+        for (var x = 0; x < maze.width; x++) {
+            maze.setCell(x, y, "block");
+            wallSet.add(x + "," + y);
+        }
+    }
+    for (var x = 1; x < maze.width; x += 2) {
+        for (var y = 0; y < maze.height; y++) {
+            maze.setCell(x, y, "block");
+            wallSet.add(x + "," + y);
+        }
+    }
+
+    for (var x = 0; x < maze.width; x++) {
+        for (var y = 0; y < maze.height; y++) {
+            if (maze.getCell(x, y) === "empty") {
+                forest.push(Array(x + "," + y));
+            }
+        }
+    }
+
+    while (!wallSet.isEmpty() && forest.length > 1) {
+        // pick a random wall
+        var wall = wallSet.keys()[Math.floor(Math.random() * wallSet.keys().length)];
+        wallSet.remove(wall);
+        var wallX = wall.split(",")[0];
+        var wallY = wall.split(",")[1];
+
+        // update forest
+        var neighbours = getNeighbours(wall);
+        if (neighbours.length < 2) {
+            continue;
+        }
+
+        var madeJoin = false;
+        var nIndex = findNeighbourInForest(forest, neighbours.pop());
+        var newTree = forest[nIndex];
+        forest = forest.slice(0, nIndex).concat(forest.slice(nIndex + 1, forest.length));
+        neighbours.forEach(function(entry) {
+            for (var i = 0; i < newTree.length; i++) {
+                if (newTree[i] == entry) {
+                    return;
+                }
+            }
+            nIndex = findNeighbourInForest(forest, entry);
+            if (nIndex == null) {
+                console.log(entry);
+                console.log(newTree);
+            }
+            madeJoin = true;
+            newTree = newTree.concat(forest[nIndex]);
+            forest = forest.slice(0, nIndex).concat(forest.slice(nIndex + 1, forest.length));
+        });
+        if (madeJoin) {
+            newTree.push(wall);
+            maze.setCell(wallX, wallY, "empty");
+        }
+        forest.push(newTree);
+    }
+
+    maze.setCell(0, 0, "player");
+    maze.setCell(maze.width - 1, maze.height - 1, "exit");
+}
+
 $(function() {
-    maze = Maze()
+    maze = Maze();
     maze.setCell(0, 0, "player");
     maze.setCell(maze.width - 1, maze.height - 1, "exit");
 
@@ -324,6 +404,10 @@ $(function() {
 
     $("#clear-path")[0].onclick = function() {
         maze.clearPath();
+    }
+
+    $("#gen-maze")[0].onclick = function() {
+        generateMaze();
     }
 
     $("#reset")[0].onclick = function() {
